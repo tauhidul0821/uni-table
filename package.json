@@ -7,8 +7,10 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build:lib": "ng build uni-table",
-    "uni-table": "ng serve uni-table-example"
+    "lib:build": "ng build uni-table",
+    "uni-table": "ng serve uni-table-example",
+    "lib:package": "cd dist/uni-table && npm pack",
+    "lib:publish": "cd dist/uni-table && npm publish --access public"
   },
   "private": true,
   "dependencies": {
