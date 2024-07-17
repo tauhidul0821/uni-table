@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'uni-table',
   template: `
     <p>
-      uni-table works!
+      uni-table works!!!!
     </p>
   `,
   styles: ``
