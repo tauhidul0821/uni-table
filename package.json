@@ -1,6 +1,12 @@
 {
-  "name": "uni-table",
-  "version": "0.0.0",
+  "name": "convenience-pay-table",
+  "version": "0.0.1",
+  "author": "Md. Tauhidul Islam",
+  "description": "This is unipet project table module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tauhidul0821/unipet-table.git"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve uni-table-example",
@@ -10,9 +16,10 @@
     "lib:build": "ng build uni-table",
     "uni-table": "ng serve uni-table-example",
     "lib:package": "cd dist/uni-table && npm pack",
+    "addUser": "npm addUser",
     "lib:publish": "cd dist/uni-table && npm publish --access public"
   },
-  "private": true,
+  "private": false,
   "dependencies": {
     "@angular/animations": "^17.3.0",
     "@angular/common": "^17.3.0",
