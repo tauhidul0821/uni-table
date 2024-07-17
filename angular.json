@@ -3,5 +3,38 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
+    "uni-table": {
+      "projectType": "library",
+      "root": "projects/uni-table",
+      "sourceRoot": "projects/uni-table/src",
+      "prefix": "uni",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/uni-table/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/uni-table/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/uni-table/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "projects/uni-table/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    }
   }
 }
