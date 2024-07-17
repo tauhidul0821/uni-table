@@ -1,14 +1,16 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
 
 @Component({
   selector: 'uni-table',
   template: `
     <p>
-      uni-table works!!!!
+      You first name is : {{firstName}}
     </p>
   `,
   styles: ``
 })
 export class UniTableComponent {
+  @Input() firstName?: string;
+
 
 }
