@@ -70,6 +70,7 @@
               "projects/uni-table-example/src/assets"
             ],
             "styles": [
+              "./node_modules/ng-zorro-antd/ng-zorro-antd.min.css",
               "projects/uni-table-example/src/styles.scss"
             ],
             "scripts": []

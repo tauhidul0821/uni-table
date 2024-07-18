@@ -1,0 +1,53 @@
+:host {
+  display: block;
+}
+:host .action-group {
+  display: flex;
+  position: relative;
+  left: -5px;
+}
+:host .action-group a {
+  color: #e31e1c;
+}
+:host .action-group a:last-child {
+  margin-right: 0;
+}
+:host .table-image {
+  max-width: 100px;
+  border: none;
+  border-radius: 5px;
+}
+.filter-footer {
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+}
+.search-box {
+  padding: 8px;
+}
+.search-box input {
+  width: 188px;
+  margin-bottom: 8px;
+  display: block;
+}
+.search-box button {
+  width: 90px;
+}
+.search-button {
+  margin-right: 8px;
+}
+.cheek-box {
+  width: 10px !important;
+}
+.header-amount {
+  margin-right: 5px;
+  font-weight: bold;
+}
+.balance-text {
+  font-weight: 500;
+  line-height: 24px;
+  color: black;
+}
+td:last-child {
+  width: 10%;
+}
+

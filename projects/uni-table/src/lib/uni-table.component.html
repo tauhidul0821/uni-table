@@ -1,0 +1,691 @@
+<div class="common-table bg-white rounded">
+  <div
+    *ngIf="!tableSettings?.isHideTableHeader"
+    class="table-top row align-items-center px-3 pb-3">
+    <div class="col-md-4 pl-0">
+      <h3 class="mb-0 table-title">
+        {{ tableSettings.tableName}}
+      </h3>
+      <ng-content select="[slot=table-header-under-table-name]"></ng-content>
+    </div>
+    <div
+      class="filter col-md-8 pr-0 text-right"
+      *ngIf="!tableSettings?.isLoading">
+      <ng-content select="[slot=table-header-right-content]"></ng-content>
+      <button
+        *ngIf="tableSettings?.enableRefreshPage"
+        (click)="onPageRefresh()"
+        nz-button
+        class="btn btn-primary btn-round btn-sm mr-2">
+        <i nz-icon nzType="sync" nzTheme="outline" class="ml-0"></i>
+        {{ 'commonVariables.refreshPage' }}
+      </button>
+      <ng-container *ngIf="tableSettings?.bulkOperations">
+        <ng-container *ngFor="let operation of tableSettings.bulkOperations">
+          <span *ngIf="operation.mode !== 'disable'; else elseBlock">
+            <button
+              class="btn btn-sm btn-round mr-3 va-baseline"
+              *ngIf="setOfCheckedId.size > 0"
+              (click)="bulkActionButtonClick(operation)"
+              [ngClass]="[
+                operation.styleClass ? operation.styleClass : 'btn-secondary'
+              ]">
+              <i
+                *ngIf="operation.icon"
+                class="mr-1"
+                nz-icon
+                [nzType]="operation.icon"
+                nzTheme="outline"></i>
+              {{ operation.name }}
+            </button>
+          </span>
+
+          <ng-template #elseBlock>
+            <button
+              class="btn btn-sm btn-round mr-3 va-baseline"
+              (click)="
+                setOfCheckedId.size > 0 && bulkActionButtonClick(operation)
+              "
+              [ngClass]="[
+                operation.styleClass ? operation.styleClass : 'btn-secondary',
+                setOfCheckedId.size < 1 ? 'disabled' : ''
+              ]">
+              <i
+                *ngIf="operation.icon"
+                class="mr-1"
+                nz-icon
+                [nzType]="operation.icon"
+                nzTheme="outline"></i>
+              {{ operation.name }}
+            </button>
+          </ng-template>
+        </ng-container>
+      </ng-container>
+
+      <ng-container
+        *ngIf="tableSettings.hasHeaderActions && tableSettings.headerActions">
+        <ng-container *ngFor="let action of tableSettings.headerActions">
+          <ng-container [ngSwitch]="action.type">
+            <ng-container *ngSwitchCase="'amount'">
+              <span class="balance-text mr-2"
+              >{{ action.name }}:
+                {{
+                  action?.amount
+                    ? (action?.amount
+                      | currency
+                      : (action.symbol ? action.symbol + ' ' : 'TTD '))
+                    : '0'
+                }}</span
+              >
+            </ng-container>
+            <ng-container *ngSwitchCase="'switchBox'">
+              <span class="header-amount">{{ action.name }}</span>
+              <nz-switch
+                [nzControl]="true"
+                (click)="headerActionButtonClick(action)"
+                class="mr-2"
+                [ngModel]="action.isCheeked"
+                [nzCheckedChildren]="action.cheekName!"
+                [nzUnCheckedChildren]="action.unCheekName!"></nz-switch>
+            </ng-container>
+
+            <ng-container *ngSwitchCase="'button'">
+              <button
+                class="btn btn-sm btn-round mr-2 va-baseline"
+                (click)="headerActionButtonClick(action)"
+                [ngClass]="[
+                  action.styleClass ? action.styleClass : 'btn-secondary'
+                ]">
+                {{ action.name }}
+              </button>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+
+      <button
+        *ngIf="
+          tableSettings.isShowAddNewButton && !tableSettings.addNewButtonEvent
+        "
+        [routerLink]="[tableSettings.addNewButtonUrl]"
+        nz-button
+        class="btn btn-secondary btn-round btn-sm mr-2">
+        {{ tableSettings.addNewButtonText! }}
+      </button>
+
+      <button
+        *ngIf="
+          tableSettings.isShowAddNewButton && tableSettings.addNewButtonEvent
+        "
+        (click)="addNewButtonClick()"
+        nz-button
+        type="button"
+        class="btn btn-secondary btn-round btn-sm mr-2">
+        {{ tableSettings.addNewButtonText! }}
+      </button>
+      <button
+        *ngIf="isActiveFilter()"
+        (click)="resetAllFilter()"
+        nz-button
+        class="btn btn-danger btn-round btn-sm mr-2">
+        {{ 'commonVariables.resetAllFilter' }}
+      </button>
+      <button
+        *ngIf="!tableSettings?.hideColumnDropdownButton"
+        nz-button
+        nz-dropdown
+        nzTrigger="click"
+        nzClickHide="false"
+        [nzDropdownMenu]="menu3"
+        nzPlacement="bottomRight"
+        nzShape="round"
+        nzType="default">
+        {{ 'commonVariables.column'
+        }}<i nz-icon nzType="down" nzTheme="outline"></i>
+      </button>
+      <ng-content></ng-content>
+    </div>
+  </div>
+  <div class="table-content">
+    <nz-table
+      [nzNoResult]="noDataFoundTpl"
+      [nzShowPagination]="false"
+      #basicTable
+      [nzPageIndex]="pageIndex"
+      [nzSize]="'small'"
+      [nzPageSize]="
+        tableSettings.enabledServerSitePagination
+          ? tableSettings.pageSize!
+          : pagesize
+      "
+      [nzData]="tableData"
+      [nzLoading]="tableSettings.isLoading"
+      [style.overflow-x]="tableSettings.isHideScrollX ? 'none' : 'auto!'"
+      (nzCurrentPageDataChange)="onCurrentPageDataChange($event)">
+      <!-- table header -->
+      <thead>
+      <tr>
+        <!-- Bulk Header Option -->
+        <ng-container *ngIf="tableSettings?.hasBulkOperation">
+          <th
+            [nzLeft]="true"
+            [(nzChecked)]="checked"
+            [nzIndeterminate]="indeterminate"
+            (nzCheckedChange)="onAllChecked($event)"></th>
+        </ng-container>
+        <!-- Bulk Header Option end-->
+
+        <!-- Header Column -->
+        <ng-container
+          *ngFor="let col of tableSettings.tableColDef; let i = index">
+          <th
+            [id]="i"
+            nzCustomFilter
+            *ngIf="col.visible"
+            (click)="(col.sort && tableSettings?.columnServerPagination) ? sortFnCall(sortAscDesc, col.sortKey ? col.sortKey : col.key): null"
+            [nzSortFn]="tableSettings?.columnServerPagination ? null : col.sortFn"
+            [nzShowSort]="col.sort"
+            [nzWidth]="col?.width ? col?.width : ''"
+            [ngClass]="
+                col.type === 'currency' ? 'text-right' : col.className
+              ">
+            {{ col.title }}
+            {{ col.titleSymbol ? ' (' + col.titleSymbol + ')' : '' }}
+            <nz-filter-trigger
+              [id]="i"
+              *ngIf="col.filter"
+              [nzActive]="isActive(col.key)"
+              [nzDropdownMenu]="menu"
+              (nzVisibleChange)="
+                  openFilter($event, col, i); selectedColumnDef = col
+                "
+              [nzVisible]="isVisibleFilter && i === visibleFilterIndex">
+              <i nz-icon nzType="filter" nzTheme="outline"></i>
+            </nz-filter-trigger>
+          </th>
+        </ng-container>
+        <!-- Header Column end-->
+
+        <!--  Header Action -->
+        <ng-container
+          *ngIf="
+              tableSettings &&
+              tableSettings.tableActions &&
+              tableSettings.tableActions.length > 0 &&
+              tableSettings?.hasActionButton
+            ">
+          <th>{{ 'commonVariables.actions' }}</th>
+        </ng-container>
+        <!-- end Header Action -->
+      </tr>
+      </thead>
+      <!--end table header -->
+      <tbody>
+      <tr *ngFor="let data of basicTable.data; trackBy: trackByFn">
+        <ng-container *ngIf="tableSettings.hasBulkOperation">
+          <td
+            class="cheek-box"
+            [nzChecked]="
+                setOfCheckedId.has(data[tableSettings.bulkOperationsKey!])
+              "
+            (nzCheckedChange)="onItemChecked(data, $event)"
+            [nzDisabled]="data.checkboxDisabled"></td>
+        </ng-container>
+
+        <ng-container
+          *ngFor="let colDef of tableSettings.tableColDef; let i = index">
+          <td *ngIf="colDef.visible">
+            <div [ngSwitch]="colDef.type">
+              <div *ngSwitchCase="'currency'" class="text-right pr-2">
+                {{
+                  data[tableSettings.tableColDef[i]?.key] >= 0 ? (data[tableSettings.tableColDef[i].key] | currency: '': 'symbol') : data[tableSettings.tableColDef[i].key] == (undefined || null) && tableSettings.tableColDef[i]?.isShowNull ? '' : (0 | currency: ' ' : 'symbol')
+                }}
+              </div>
+              <div *ngSwitchCase="'date'">
+                {{
+                  data[tableSettings.tableColDef[i].key]
+                    ? (data[tableSettings.tableColDef[i].key]
+                      | date
+                      : tableSettings.tableColDef[i].dateFormat ||
+                      dateTimeFormat
+                        : tableSettings.tableColDef[i].dateFormatType ||
+                      'local')
+                    : notAvailableText
+                }}
+              </div>
+              <div *ngSwitchCase="'number'">
+                {{
+                  data[tableSettings.tableColDef[i].key]
+                    ? data[tableSettings.tableColDef[i].key]
+                    : tableSettings.tableColDef[i]?.isShowNull
+                      ? ''
+                      : 0
+                }}
+              </div>
+              <div *ngSwitchCase="'phone'">
+                {{
+                  data[tableSettings.tableColDef[i].key]
+                    ? (data[tableSettings.tableColDef[i].key])
+                    : tableSettings.tableColDef[i]?.isShowNull
+                      ? ''
+                      : notAvailableText
+                }}
+              </div>
+
+              <div *ngSwitchCase="'iconText'">
+                <ng-container
+                  *ngIf="
+                      data[tableSettings.tableColDef[i].key];
+                      else other_iconText
+                    ">
+                  <i
+                    class="mr-2"
+                    *ngIf="data.tableIconType"
+                    nz-icon
+                    [nzType]="data.tableIconType"
+                    nzTheme="outline"></i>
+                  {{ data[tableSettings.tableColDef[i].key] }}
+                </ng-container>
+                <ng-template #other_iconText>{{
+                    notAvailableText
+                  }}</ng-template>
+              </div>
+              <div *ngSwitchCase="'image'" class="text-center">
+                <ng-container
+                  *ngIf="
+                      data[tableSettings.tableColDef[i].key];
+                      else other_image
+                    ">
+                  <img
+                    class="table-image"
+                    [alt]="data[tableSettings.tableColDef[i].key]"
+                    [src]="data[tableSettings.tableColDef[i].key]" />
+                </ng-container>
+                <ng-template #other_image>{{ notAvailableText }}</ng-template>
+              </div>
+              <div
+                *ngSwitchDefault
+                [className]="
+                    tableSettings &&
+                    tableSettings.tableColDef &&
+                    tableSettings.tableColDef[i]?.className
+                  ">
+                {{
+                  tableSettings.tableColDef[i]?.isTitleCase &&
+                  data[tableSettings.tableColDef[i].key]
+                    ? (data[tableSettings.tableColDef[i].key])
+                    : tableSettings.tableColDef[i]?.isShowNull &&
+                    !data[tableSettings.tableColDef[i].key]
+                      ? '-'
+                      : (data[tableSettings.tableColDef[i].key]
+                        || 'showNotAvailable')
+                }}
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container
+          *ngIf="
+              tableSettings &&
+              tableSettings.tableActions &&
+              tableSettings.tableActions.length > 0 &&
+              tableSettings?.hasActionButton
+            ">
+          <td>
+            <div class="action-group">
+              <ng-container *ngFor="let item of tableSettings?.tableActions">
+                <ng-container [ngSwitch]="item.type">
+                  <!-- TESTING  -->
+                  <ng-container *ngSwitchCase="tableActionType.TOGGLE">
+                    <a
+                      *ngIf="!data.isHideToggleAction"
+                      (click)="actionButtonClick(item, data)"
+                      [nzTooltipTitle]="
+                          data[item.mapTo!] ? item.truthValue : item.falseValue
+                        "
+                      nz-tooltip>
+                      <nz-switch
+                        [nzControl]="true"
+                        [ngModel]="data[item.mapTo!]"
+                        [nzCheckedChildren]="checkedTemplate"
+                        [nzUnCheckedChildren]="unCheckedTemplate"></nz-switch>
+                      <ng-template #checkedTemplate>
+                        <span nz-icon nzType="check"></span>
+                      </ng-template>
+                      <ng-template #unCheckedTemplate>
+                        <span nz-icon nzType="close"></span>
+                      </ng-template>
+                    </a>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="tableActionType.RELEASE">
+                    <a
+                      *ngIf="!data.isHideReleaseAction"
+                      (click)="actionButtonClick(item, data)"
+                      [nzTooltipTitle]="
+                          (data[item.mapTo!] | lowercase) === 'no'
+                            ? 'Assign'
+                            : 'Release'
+                        "
+                      nz-tooltip>
+                      <button nz-button nzSize="small" nzType="link">
+                        <i
+                          nz-icon
+                          [nzType]="
+                              (data[item.mapTo!] | lowercase) === 'no'
+                                ? 'idcard'
+                                : 'disconnect'
+                            "
+                          [nzTheme]="item.iconTheme"></i>
+                      </button>
+                    </a>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="tableActionType.LOCK">
+                    <a
+                      *ngIf="!data.isHideLockAction"
+                      (click)="actionButtonClick(item, data)"
+                      [nzTooltipTitle]="(
+                          data[item.mapTo] ? 'commonVariables.deactivate' : 'commonVariables.activate')
+                        "
+                      nz-tooltip>
+                      <button
+                        nz-button
+                        nzSize="small"
+                        nzType="link"
+                        [style.color]="data[item.mapTo] ? '' : 'grey'">
+                        <i
+                          nz-icon
+                          [nzType]="data[item.mapTo] ? 'lock' : 'unlock'"
+                          [nzTheme]="item.iconTheme"></i>
+                      </button>
+                    </a>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="tableActionType.DELETE">
+                    <a
+                      *ngIf="!data.isHideDeleteAction"
+                      (click)="actionButtonClick(item, data)"
+                      nz-tooltip
+                      [nzTooltipTitle]="item.title">
+                      <button nz-button nzSize="small" nzType="link" nzDanger>
+                        <i
+                          nz-icon
+                          [nzType]="item.iconType"
+                          [nzTheme]="item.iconTheme"></i>
+                      </button>
+                    </a>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="tableActionType.REJECT">
+                    <a
+                      *ngIf="!data.isHideRejectAction"
+                      (click)="actionButtonClick(item, data)"
+                      nz-tooltip
+                      [nzTooltipTitle]="item.title">
+                      <button nz-button nzSize="small" nzType="link" nzDanger>
+                        <i
+                          nz-icon
+                          [nzType]="item.iconType"
+                          [nzTheme]="item.iconTheme"></i>
+                      </button>
+                    </a>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="tableActionType.EDIT">
+                    <a
+                      *ngIf="!data.isHideEditAction"
+                      (click)="actionButtonClick(item, data)"
+                      nz-tooltip
+                      [nzTooltipTitle]="item.title">
+                      <button nz-button nzSize="small" nzType="link">
+                        <i
+                          nz-icon
+                          [nzType]="item.iconType"
+                          [nzTheme]="item.iconTheme"></i>
+                      </button>
+                    </a>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="tableActionType.OTHERS">
+                    <a
+                      *ngIf="!data.isHideOthersAction"
+                      (click)="actionButtonClick(item, data)"
+                      nz-tooltip
+                      [nzTooltipTitle]="item.title">
+                      <button nz-button nzSize="small" nzType="link">
+                        <i
+                          nz-icon
+                          [nzType]="item.iconType"
+                          [nzTheme]="item.iconTheme"></i>
+                      </button>
+                    </a>
+                  </ng-container>
+
+                  <ng-container *ngSwitchDefault>
+                    <a
+                      (click)="actionButtonClick(item, data)"
+                      nz-tooltip
+                      [nzTooltipTitle]="item.title">
+                      <button nz-button nzSize="small" nzType="link">
+                        <i
+                          nz-icon
+                          [nzType]="item.iconType"
+                          [nzTheme]="item.iconTheme"></i>
+                      </button>
+                    </a>
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </div>
+          </td>
+        </ng-container>
+      </tr>
+      </tbody>
+    </nz-table>
+    <ng-template #noDataFoundTpl>
+      <nz-empty
+        nzNotFoundImage="simple"
+        [nzNotFoundContent]="'messages.dataNotFound'">
+      </nz-empty>
+    </ng-template>
+    <ng-container
+      *ngIf="
+        tableSettings.enabledServerSitePagination;
+        else clientPaginationTemplate
+      ">
+<!--      <terpel-server-pagination-->
+<!--        [tableSetting]="tableSettings"-->
+<!--        [total]="tableSettings.totalData"-->
+<!--        [pageSize]="tableSettings.pageSize"-->
+<!--        [pageIndex]="tableSettings.pageIndex"-->
+<!--        [data]="tableData"-->
+<!--        (pageChange)="paginateServer($event)"></terpel-server-pagination>-->
+    </ng-container>
+    <ng-template #clientPaginationTemplate>
+<!--      <terpel-client-pagination-->
+<!--        [total]="tableData?.length || 0"-->
+<!--        [currentPage]="pageIndex"-->
+<!--        [pageSize]="pagesize"-->
+<!--        [data]="tableData"-->
+<!--        [tableSetting]="tableSettings"-->
+<!--        (pageChange)="paginate($event)"></terpel-client-pagination>-->
+    </ng-template>
+  </div>
+</div>
+<nz-dropdown-menu #menu="nzDropdownMenu">
+  <div class="ant-table-filter-dropdown" style="max-width: 400px">
+    <div class="search-box">
+      <nz-input-group
+        *ngIf="
+          !selectedColumnDef?.type ||
+          selectedColumnDef?.type === 'phone' ||
+          selectedColumnDef?.type === 'iconText'
+        "
+        [nzSuffix]="inputClearTpl"
+        style="width: auto; display: flex; margin-bottom: 5px">
+        <input
+          nzSize="small"
+          style="width: 100%; margin: 0"
+          (keyup)="filterChecklist(searchValue!)"
+          name="searchValue"
+          type="text"
+          nz-input
+          [placeholder]="'commonVariables.search'"
+          [(ngModel)]="searchValue" />
+      </nz-input-group>
+      <nz-input-group
+        *ngIf="
+          selectedColumnDef?.type === 'number' ||
+          selectedColumnDef?.type === 'currency'
+        "
+        style="width: auto; display: flex; margin-bottom: 5px">
+        <input
+          nzSize="small"
+          style="width: 100%; margin: 0"
+          (keyup)="
+            filterChecklist(searchValue!, modeType, selectedColumnDef.type)
+          "
+          name="searchValue"
+          type="text"
+          nz-input
+          [(ngModel)]="searchValue" />
+      </nz-input-group>
+
+      <ng-template #inputClearTpl>
+        <i
+          nz-icon
+          class="ant-input-clear-icon"
+          nzTheme="fill"
+          nzType="close-circle"
+          *ngIf="searchValue"
+          (click)="searchValue = null; filterChecklist(searchValue!)"></i>
+      </ng-template>
+
+      <!--start mode -->
+      <div
+        class="mt-2"
+        *ngIf="
+          selectedColumnDef?.type === 'number' ||
+          selectedColumnDef?.type === 'currency'
+        ">
+        <strong>{{ 'common_mode' }}: </strong>
+<!--        <nz-radio-group-->
+<!--          [(ngModel)]="modeType"-->
+<!--          (ngModelChange)="onRadioModeChange()"-->
+<!--          nzSize="small">-->
+<!--          <ng-container *ngFor="let item of objectOfMode">-->
+<!--            <label-->
+<!--              nz-tooltip-->
+<!--              [nzTooltipTitle]="item === 'GT' ? 'Greater Than' : 'Less Than'"-->
+<!--              nz-radio-button-->
+<!--              [nzValue]="item"-->
+<!--            >{{ item }}</label-->
+<!--            >-->
+<!--          </ng-container>-->
+<!--        </nz-radio-group>-->
+      </div>
+      <!--end mode -->
+      <div
+        *ngIf="!tableSettings.columnServerPagination"
+        class="mt-2 mb-2 pb-2"
+        style="border-bottom: 1px solid rgb(233, 233, 233)">
+        <label
+          nz-checkbox
+          [(ngModel)]="checkedAll"
+          (ngModelChange)="checklistToggleAll()"
+          [nzIndeterminate]="
+            columnCheckList &&
+            columnCheckList.some(fn) &&
+            !columnCheckList.every(fn)
+          ">
+          {{ (checkedAll ? 'commonVariables.unCheck' : 'commonVariables.check' )}} {{ 'commonVariables.all' }}
+        </label>
+      </div>
+      <ng-container
+        *ngIf="
+          columnCheckList &&
+          columnCheckList.length > 0 &&
+          selectedColumnDef?.type !== 'date' &&
+          !tableSettings.columnServerPagination
+        ">
+        <div class="mb-3" style="max-height: 200px; overflow: auto">
+          <ng-container *ngFor="let item of columnCheckList">
+            <div class="mb-2">
+              <label name="itemcheek" nz-checkbox [(ngModel)]="item.checked">{{
+                  item.value || 'Not Available'
+                }}</label>
+            </div>
+          </ng-container>
+        </div>
+      </ng-container>
+      <!-- <ng-container
+        *ngIf="
+          columnCheckList &&
+          columnCheckList.length > 0 &&
+          selectedColumnDef.type === 'date'
+        ">
+        <div class="mb-3" style="max-height: 200px; overflow: auto">
+          <ng-container *ngFor="let item of columnCheckList">
+            <div class="mb-2">
+              <label name="itemcheek" nz-checkbox [(ngModel)]="item.checked">{{
+                item.value | date: 'dd-MMM-yy'
+              }}</label>
+            </div>
+          </ng-container>
+        </div>
+      </ng-container> -->
+
+      <button
+        *ngIf="!tableSettings.columnServerPagination"
+        nz-button
+        nzSize="small"
+        nzType="primary"
+        (click)="search()"
+        class="search-button btn btn-secondary">
+        {{ 'commonVariables.ok' }}
+      </button>
+
+      <button
+        *ngIf="!tableSettings.columnServerPagination"
+        nz-button nzSize="small" (click)="resetFilter(activeKey)">
+        {{ 'commonVariables.reset' }}
+      </button>
+
+
+      <button
+        *ngIf="tableSettings.columnServerPagination"
+        nz-button
+        nzSize="small"
+        nzType="primary"
+        (click)="filterColumnPagination(selectedColumnDef?.key)"
+        class="search-button btn btn-secondary">
+        {{ 'commonVariables.ok' }}
+      </button>
+
+
+      <button
+        style="float: right;"
+        *ngIf="tableSettings.columnServerPagination"
+        nz-button nzSize="small" (click)="resetColumnPaginationFilter()">
+        {{ 'commonVariables.reset' }}
+      </button>
+    </div>
+  </div>
+</nz-dropdown-menu>
+
+<nz-dropdown-menu #menu3="nzDropdownMenu">
+  <ul nz-menu>
+    <ng-container *ngFor="let item of tableSettings.tableColDef">
+      <li nz-menu-item>
+        <label
+          [nzDisabled]="item.alwaysVisible"
+          nz-checkbox
+          [(ngModel)]="item.visible"
+        >{{ item.title }}</label
+        >
+      </li>
+    </ng-container>
+  </ul>
+</nz-dropdown-menu>

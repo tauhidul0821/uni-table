@@ -6,6 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "inlineSources": true,
+    "strict": false,
     "types": []
   },
   "exclude": [
