@@ -1,18 +1,21 @@
 {
   "name": "convenience-pay-table",
-  "version": "0.0.1",
+  "version": "0.0.3-beta",
   "author": "Md. Tauhidul Islam",
   "description": "This is unipet project table module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tauhidul0821/unipet-table.git"
+    "url": "https://github.com/tauhidul0821/uni-table.git"
   },
   "peerDependencies": {
+    "@angular/cdk": "^17.3.10",
     "@angular/common": "^17.3.0",
-    "@angular/core": "^17.3.0"
+    "@angular/core": "^17.3.0",
+    "lodash": "^4.17.21",
+    "ng-zorro-antd": "^17.4.1"
   },
-  "dependencies": {
-    "tslib": "^2.3.0"
-  },
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "@types/lodash": "^4.17.7"
+  }
 }
